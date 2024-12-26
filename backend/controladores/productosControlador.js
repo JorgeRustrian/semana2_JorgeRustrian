@@ -1,6 +1,5 @@
 import { sequelize } from "#config/db.js";
 import producto from "../schemas/productosSchema.js";
-import upload from "#config/multer.js";
 
 const obtenerProductos = async (req, res) => {
     try {
@@ -30,7 +29,7 @@ const obtenerProductosPorid= async (req,res)=>{
 const insertarProductos = async (req, res) => {
     try {
         const fecha_creacion = new Date(); 
-      
+     
         console.log(req.file);
 
         const {  

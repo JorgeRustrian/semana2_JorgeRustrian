@@ -88,6 +88,22 @@ const cambiarEstadoUsuario= Joi.object({
         "any.required":"El campo de idUsuario  es obligatorio"
     })
 });
+const loginUsuario=Joi.object({
+    email:Joi.string()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+        "string.email": "El correo electrónico debe ser válido.",
+        "any.required": "El correo electrónico es obligatorio."
+    }),
+    contrasena:Joi.string()
+    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$'))
+    .required()
+    .messages({
+        "string.pattern.base": "La contraseña debe tener al menos 8 caracteres, incluir una letra mayúscula, una minúscula, un número y un carácter especial.",
+        "any.required": "La contraseña es obligatoria."
+    })
+});
 
 const validarUsuario= (req,res,next)=>{
     const {error}=usuario.validate(req.body,{abortEarly:false});
@@ -112,4 +128,11 @@ const validacionEstadosUsuarios=(req,res,next)=>{
  }
  next();
 }
-export {validarUsuario,validarActualizacionDatosUsuario,validacionEstadosUsuarios};
+const validarLoginUsuario=(req,res,next)=>{
+    const {error}=loginUsuario.validate(req.body,{abortEarly:false});
+    if(error){
+        return res.status(400).json({  errors: error.details.map((detail) => detail.message)});
+    }
+    next();
+}
+export {validarUsuario,validarActualizacionDatosUsuario,validacionEstadosUsuarios,validarLoginUsuario};

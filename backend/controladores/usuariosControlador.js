@@ -1,7 +1,7 @@
 import usuarios from"../schemas/usuariosSchema.js"
 import clientes from"../schemas/clientesSchema.js"
-
-
+import { compare, hash } from "bcrypt";
+import { SignJWT } from "jose";
 
 const insertarusuario= async (req,res) =>{
   
@@ -13,10 +13,14 @@ const insertarusuario= async (req,res) =>{
 
         const {rol_idRol,estados_idestados,correo_electronico,nombre_completo,contrasena,telefono,fecha_nacimiento}=req.body
         console.log("Datos recibidos:", req.body);
-        console.log(fecha_creacion,+" "+fecha_nacimiento);
+      const usuarioPorCorreo= await usuarios.findOne(correo_electronico);
+      if(usuarioPorCorreo){
+        return res.status(409).send("correo ya en uso");
+      }
+      const hashPassword= await hash(contrasena,12);
         const nuevousuario=await usuarios.create(
-           { rol_idRol,estados_idestados,correo_electronico,nombre_completo,contrasena,telefono,fecha_nacimiento,fecha_creacion}
-        
+           { rol_idRol,estados_idestados,correo_electronico,nombre_completo,contrasena:hashPassword,telefono,fecha_nacimiento,fecha_creacion}
+                 
 
         );
       if(rol_idRol===2){
@@ -100,7 +104,7 @@ const activar_desactivar_usuario=async(req,res)=>{
    if (!idUsuario) {
     return res.status(400).json({ error: "El idUsuario es obligatorio" });
 }
-const usuario = await usuarios.findByPk(idUsuario);
+const usuario = await usuarios.findOne(idUsuario);
 
 if (!usuario) {
     return res.status(404).json({ error: "Usuario no encontrado" });
@@ -125,6 +129,29 @@ return res.status(500).json({
 
 
 }
+const login = async (req,res)=>{
+const {email,password}=req.body;
+const buscarPorMail=await usuarios.findOne(email);
+if(!buscarPorMail){
+  return  res.status(409).send("Credenciales incorrectas");
+}
+const comprobar=await compare(password,buscarPorMail.contrasena);
+if(!comprobar){
+ return  res.status(409).send("Credenciales incorrectas");
+}
+const encoder = TextEncoder();
+const jwtConstructor= new SignJWT({idUsuario:buscarPorMail.idUsuario,
+    rol_idRol:buscarPorMail.rol_idRol
+});
+const jwt= jwtConstructor.setProtectedHeader({alg:"HS256",
+    typ:"JWT",
 
 
-export {insertarusuario,actualizarDatosUsuario,activar_desactivar_usuario};
+
+}).setIssuedAt().setExpirationTime("1d").sign(encoder.encode(process.env.JWT_PRIVATE_KEY));
+return res.send({jwt});
+
+}
+
+
+export {insertarusuario,actualizarDatosUsuario,activar_desactivar_usuario,login};

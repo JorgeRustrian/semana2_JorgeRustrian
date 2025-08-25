@@ -98,7 +98,7 @@ delete        http://localhost:3000/categoriaProductos/eliminarCategoria        
 }
 
 
-Pendiente: Terminar de pulir los endpoindts de productos. Crear los de orden, y agregar los middlewares de autorizacion y autenticacion. espero terminarlos a la brevedad. 
+
 
 
 
